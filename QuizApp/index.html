@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Application</title>
+  <style>
+    /* Your CSS styles go here */
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(to right, #1205cf94, #c6cc0d);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    #quiz-container {
+      max-width: 600px;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      text-align: center;
+    }
+
+    .question {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .options {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .options li {
+      margin-bottom: 10px;
+      background-color: #4caf50;
+      color: #fff;
+      padding: 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .options li:hover {
+      background-color: #1f9825;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #2167f3;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #0b7dda;
+    }
+  </style>
+</head>
+<body>
+
+<div id="quiz-container">
+  <div id="question" class="question"></div>
+  <ul id="options" class="options"></ul>
+  <button onclick="resetQuiz()">Restart</button>
+</div>
+
+<script>
+  let quizData = [];
+  let currentQuestionIndex = 0;
+
+  function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+  }
+
+  function fetchQuestions() {
+    fetch('https://opentdb.com/api.php?amount=5&type=multiple')
+      .then(response => response.json())
+      .then(data => {
+        // Extract and format questions from the API response
+        quizData = data.results.map(result => ({
+          question: result.question,
+          options: result.incorrect_answers.concat(result.correct_answer),
+          correctAnswer: result.correct_answer
+        }));
+
+        shuffleArray(quizData);
+        loadQuestion();
+      })
+      .catch(error => console.error('Error fetching questions:', error));
+  }
+
+  function loadQuestion() {
+    const currentQuestion = quizData[currentQuestionIndex];
+    document.getElementById('question').innerText = currentQuestion.question;
+
+    const optionsList = document.getElementById('options');
+    optionsList.innerHTML = "";
+    currentQuestion.options.forEach(option => {
+      const li = document.createElement('li');
+      li.innerText = option;
+      li.onclick = () => checkAnswer(option);
+      optionsList.appendChild(li);
+    });
+  }
+
+  function checkAnswer(selectedOption) {
+    const currentQuestion = quizData[currentQuestionIndex];
+    if (selectedOption === currentQuestion.correctAnswer) {
+      alert("Correct!");
+    } else {
+      alert("Wrong! The correct answer is: " + currentQuestion.correctAnswer);
+    }
+
+    currentQuestionIndex++;
+    if (currentQuestionIndex < quizData.length) {
+      loadQuestion();
+    } else {
+      alert("Quiz completed!");
+      resetQuiz();
+    }
+  }
+
+  function nextQuestion() {
+    if (currentQuestionIndex < quizData.length) {
+      loadQuestion();
+    } else {
+      alert("Quiz completed!");
+      resetQuiz();
+    }
+  }
+
+  function resetQuiz() {
+    currentQuestionIndex = 0;
+    fetchQuestions();
+  }
+
+  // Initial load
+  fetchQuestions();
+</script>
+
+</body>
+</html>
